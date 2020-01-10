@@ -43,33 +43,16 @@ func TestProcessor_Process(t *testing.T) {
 	log := new(bytes.Buffer)
 	p := jty.NewProcessor(runtime.GOMAXPROCS(-1), fs, log)
 
-	if err := afero.WriteFile(fs, "in1.jsonnet", []byte(`
-local one = {one: 1};
-
-[
- one,
- one + {two: 2},
-]
-`), 0600); err != nil {
-		t.Fatal(err)
-	}
+	JYOneTwo.WriteJ(t, fs, "in1.jsonnet")
 
 	// Directory yml wasn't created up front.
+	// Process must mkdirall on it.
 	p.Process("in1.jsonnet", filepath.Join("yml", "out1.yml"))
 	p.Close()
 
-	buf, err := afero.ReadFile(fs, filepath.Join("yml", "out1.yml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	JYOneTwo.ExpectY(t, fs, filepath.Join("yml", "out1.yml"))
 
-	if want := `---
-one: 1
----
-one: 1
-two: 2
-...
-`; want != string(buf) {
-		t.Fatalf("expected YAML output to be %q, got %q", want, buf)
+	if got := log.String(); got != "" {
+		t.Errorf("expected empty log, got %q", got)
 	}
 }
