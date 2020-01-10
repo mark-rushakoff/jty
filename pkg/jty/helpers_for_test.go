@@ -59,6 +59,18 @@ two: 2
 ...
 `,
 	}
+
+	JYSeq = JY{
+		J: `[ [n for n in std.range(1, 5)] ]`,
+		Y: `---
+- 1
+- 2
+- 3
+- 4
+- 5
+...
+`,
+	}
 )
 
 // TestCommand wraps a jty.Command with stdout and stderr exposed as *bytes.Buffer.

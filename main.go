@@ -21,6 +21,7 @@ func main() {
 		fs.Usage()
 		os.Exit(1)
 	}
+	flags.FinishParse()
 	flags.Args = fs.Args()
 
 	c := &jty.Command{
