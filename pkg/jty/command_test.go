@@ -27,6 +27,26 @@ func TestCommand_PositionalArgs(t *testing.T) {
 	}
 }
 
+func TestCommand_PositionalArgs_Odd(t *testing.T) {
+	tc := NewTestCommand("")
+
+	err := tc.Cmd.Run(&jty.Flags{
+		Args: []string{"in1.jsonnet"},
+	})
+	if err != jty.ErrOddInputFiles {
+		t.Fatalf("expected ErrOddInputFiles, got %v", err)
+	}
+}
+
+func TestCommand_PositionalArgs_Missing(t *testing.T) {
+	tc := NewTestCommand("")
+
+	err := tc.Cmd.Run(new(jty.Flags))
+	if err != jty.ErrNoInputFiles {
+		t.Fatalf("expected ErrNoInputFiles, got %v", err)
+	}
+}
+
 func TestCommand_DryRun(t *testing.T) {
 	tc := NewTestCommand("")
 	JYOneTwo.WriteJ(t, tc.FS, "in1.jsonnet")
