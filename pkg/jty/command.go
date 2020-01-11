@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ErrOddInputFiles = errors.New("odd number of file arguments received; must be given in pairs")
-	ErrNoInputFiles  = errors.New("at least one input-output pair must be given")
+	ErrOddInputFiles      = errors.New("odd number of file arguments received; must be given in pairs")
+	ErrOddInputFilesStdin = errors.New(ErrOddInputFiles.Error() + " (ensure final item has terminating newline or NUL)")
+	ErrNoInputFiles       = errors.New("at least one input-output pair must be given")
 )
 
 // Command represents a running CLI environment.
@@ -78,7 +79,7 @@ func (c *Command) processFromStdin(f *Flags, p *Processor) error {
 		inPath := s.Text()
 
 		if !s.Scan() {
-			return ErrOddInputFiles
+			return ErrOddInputFilesStdin
 		}
 		outPath := s.Text()
 

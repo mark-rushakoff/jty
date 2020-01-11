@@ -127,8 +127,8 @@ func TestCommand_StdinArgs_MissingFinalTerminator(t *testing.T) {
 			if err := tc.Cmd.Run(&jty.Flags{
 				FromStdin: true,
 				Zero:      delim == "\x00",
-			}); err != jty.ErrOddInputFiles {
-				t.Fatalf("expected ErrOddInputFiles, got %v", err)
+			}); err != jty.ErrOddInputFilesStdin {
+				t.Fatalf("expected ErrOddInputFilesStdin, got %v", err)
 			}
 		})
 	}
@@ -152,8 +152,8 @@ func TestCommand_StdinArgs_Odd(t *testing.T) {
 			if err := tc.Cmd.Run(&jty.Flags{
 				FromStdin: true,
 				Zero:      delim == "\x00",
-			}); err != jty.ErrOddInputFiles {
-				t.Fatalf("expected ErrOddInputFiles, got %v", err)
+			}); err != jty.ErrOddInputFilesStdin {
+				t.Fatalf("expected ErrOddInputFilesStdin, got %v", err)
 			}
 		})
 	}
