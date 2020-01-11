@@ -40,6 +40,7 @@ type Processor struct {
 	// If not nil, Processor will operate in dry run mode and write messages here.
 	// Must be set before any calls to Process.
 	DryRunDest io.Writer
+	dryRunMu   sync.Mutex
 
 	vm *jsonnet.VM
 	fs afero.Fs
@@ -109,8 +110,9 @@ func (p *Processor) readFiles() {
 
 	for req := range p.reqCh {
 		if p.DryRunDest != nil {
-			// TODO: does this need a mutex?
+			p.dryRunMu.Lock()
 			_, _ = fmt.Fprintf(p.DryRunDest, "would process %s and save YAML output to %s\n", req.InPath, req.OutPath)
+			p.dryRunMu.Unlock()
 			continue
 		}
 		content, err := afero.ReadFile(p.fs, req.InPath)

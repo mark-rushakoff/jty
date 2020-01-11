@@ -40,6 +40,7 @@ func (c *Command) Run(f *Flags) error {
 	}
 
 	p := NewProcessor(runtime.GOMAXPROCS(-1), c.FS, c.Stderr)
+	defer p.Close()
 	if f.DryRun {
 		p.DryRunDest = c.Stdout
 	}
@@ -54,8 +55,6 @@ func (c *Command) Run(f *Flags) error {
 			p.Process(f.Args[i], f.Args[i+1])
 		}
 	}
-
-	p.Close()
 
 	// Don't need to take lock, as we have finished all goroutines which may access the field.
 	if p.didLogError {
