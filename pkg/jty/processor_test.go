@@ -2,7 +2,6 @@ package jty_test
 
 import (
 	"bytes"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -45,12 +44,10 @@ func TestProcessor_Process(t *testing.T) {
 
 	JYOneTwo.WriteJ(t, fs, "in1.jsonnet")
 
-	// Directory yml wasn't created up front.
-	// Process must mkdirall on it.
-	p.Process("in1.jsonnet", filepath.Join("yml", "out1.yml"))
+	p.Process("in1.jsonnet", "out1.yml")
 	p.Close()
 
-	JYOneTwo.ExpectY(t, fs, filepath.Join("yml", "out1.yml"))
+	JYOneTwo.ExpectY(t, fs, "out1.yml")
 
 	if got := log.String(); got != "" {
 		t.Errorf("expected empty log, got %q", got)

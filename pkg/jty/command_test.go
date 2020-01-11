@@ -220,3 +220,15 @@ func TestCommand_StdinArgs_DryRun(t *testing.T) {
 		})
 	}
 }
+
+// Regression test for a data race.
+func TestCommand_MultipleLogs(t *testing.T) {
+	tc := NewTestCommand("")
+
+	if err := tc.Cmd.Run(&jty.Flags{
+		// Multiple input files that don't exist.
+		Args: []string{"1.jsonnet", "1.yml", "2.jsonnet", "2.yml", "3.jsonnet", "3.yml"},
+	}); err != jty.ErrEncounteredErrors {
+		t.Fatalf("expected ErrEncounteredErrors, got %v", err)
+	}
+}

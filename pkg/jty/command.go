@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"runtime"
 
@@ -15,6 +14,8 @@ var (
 	ErrOddInputFiles      = errors.New("odd number of file arguments received; must be given in pairs")
 	ErrOddInputFilesStdin = errors.New(ErrOddInputFiles.Error() + " (ensure final item has terminating newline or NUL)")
 	ErrNoInputFiles       = errors.New("at least one input-output pair must be given")
+
+	ErrEncounteredErrors = errors.New("encountered errors during processing; failing")
 )
 
 // Command represents a running CLI environment.
@@ -41,13 +42,13 @@ func (c *Command) Run(f *Flags) error {
 	}
 
 	p := NewProcessor(runtime.GOMAXPROCS(-1), c.FS, c.Stderr)
-	defer p.Close()
 	if f.DryRun {
 		p.DryRunDest = c.Stdout
 	}
 
 	if f.FromStdin {
 		if err := c.processFromStdin(f, p); err != nil {
+			p.Close()
 			return err
 		}
 	} else {
@@ -57,9 +58,11 @@ func (c *Command) Run(f *Flags) error {
 		}
 	}
 
+	p.Close()
+
 	// Don't need to take lock, as we have finished all goroutines which may access the field.
 	if p.didLogError {
-		return fmt.Errorf("encountered errors during processing; failing")
+		return ErrEncounteredErrors
 	}
 
 	return nil
