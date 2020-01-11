@@ -12,6 +12,14 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+// The processor is implemented as a 3-stage pipeline.
+// First, many goroutines handle reading the actual Jsonnet files
+// Those goroutines fan in to a single goroutine which evaluates the Jsonnet in a single VM;
+// this allows caching of common imported Jsonnet files.
+// Then the evaluated Jsonnet fans out to another set of goroutines
+// which converts the individual Jsonnet results to YAML
+// and writes the YAML to disk.
+
 // processRequest is a request to compile the jsonnet at inPath
 // to a YAML file saved at outPath.
 type processRequest struct {
@@ -64,6 +72,9 @@ func NewProcessor(ioWorkers int, fs afero.Fs, logDest io.Writer) *Processor {
 	}
 
 	p := &Processor{
+		// Right now, we don't set vm.Importer.
+		// In the production code path, that is fine as it uses a FileImporter to read from the actual filesystem.
+		// None of our tests currently rely on any imports, so we don't need to write an afero importer yet.
 		vm: jsonnet.MakeVM(),
 		fs: fs,
 

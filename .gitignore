@@ -1,2 +1,5 @@
 # If you use go build .
 /jty
+
+# We are not committing vendor in this project.
+/vendor
