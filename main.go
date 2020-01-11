@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/influxdata/jty/pkg/jty"
 	"github.com/spf13/afero"
@@ -12,8 +13,34 @@ import (
 func main() {
 	fs := pflag.NewFlagSet("jty", pflag.ExitOnError)
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "USAGE: %s [opts] [[INPUT_JSONNET OUTPUT_YAML]...]:\n", os.Args[0])
-		fs.PrintDefaults()
+		exe := filepath.Base(os.Args[0])
+		fmt.Fprintf(os.Stderr, "USAGE: %s [opts] [[INPUT_JSONNET OUTPUT_YAML]...]:\n", exe)
+		fmt.Fprintln(os.Stderr, fs.FlagUsages())
+		fmt.Fprintf(os.Stderr, `EXAMPLE USES
+
+Evaluate in.jsonnet and save the resulting YAML as out.yaml:
+    %[1]s in.jsonnet out.yaml
+
+Evaluate multiple .jsonnet files and save the resulting YAML in specific locations:
+    %[1]s in1.jsonnet out/1.yaml conf.jsonnet conf.yaml
+
+Evaluate each .jsonnet file under the current directory,
+and save the .yml file adjacent to the .jsonnet file:
+    find . -name '*.jsonnet' \
+      -exec bash -c 'for p in "$@"; do
+        printf "%%s\n%%s.yml\n" "$p" "${p%%.jsonnet}"
+        done' _ {} + |
+      %[1]s -i
+
+Evaluate each .jsonnet file under the current directory,
+and for each file foo.jsonnet save a relative yml/foo.yml file
+(useful for tools that expect only .yml files in a directory):
+    find . -name '*.jsonnet' \
+      -exec bash -c 'for p in "$@"; do
+        printf "%%s\n%%s/yml/%%s.yml\n" "$p" "$(dirname "$p")" "$(basename "$p" .jsonnet)"
+        done' _ {} + |
+      %[1]s -i
+`, exe)
 	}
 	var flags jty.Flags
 	flags.AddToFlagSet(fs)
@@ -22,6 +49,11 @@ func main() {
 		os.Exit(1)
 	}
 	flags.FinishParse()
+
+	if flags.HelpRequested {
+		fs.Usage()
+		os.Exit(0)
+	}
 	flags.Args = fs.Args()
 
 	c := &jty.Command{
@@ -35,5 +67,4 @@ func main() {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	return
 }
