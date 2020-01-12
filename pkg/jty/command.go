@@ -7,6 +7,7 @@ import (
 	"io"
 	"runtime"
 
+	jsonnet "github.com/google/go-jsonnet"
 	"github.com/spf13/afero"
 )
 
@@ -41,7 +42,14 @@ func (c *Command) Run(f *Flags) error {
 		}
 	}
 
-	p := NewProcessor(runtime.GOMAXPROCS(-1), c.FS, c.Stderr)
+	vm := jsonnet.MakeVM()
+	// For now, always set a FileImporter.
+	// Perhaps a custom Importer could be injected if that proves necessary for tests.
+	vm.Importer(&jsonnet.FileImporter{
+		JPaths: f.JPaths,
+	})
+
+	p := NewProcessor(vm, runtime.GOMAXPROCS(-1), c.FS, c.Stderr)
 	if f.DryRun {
 		p.DryRunDest = c.Stdout
 	}

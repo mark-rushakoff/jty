@@ -66,7 +66,7 @@ type Processor struct {
 
 // NewProcessor returns a new Processor that has ioWorkers goroutines to handle reading input files
 // and another ioWorkers goroutines to handle writing output files.
-func NewProcessor(ioWorkers int, fs afero.Fs, logDest io.Writer) *Processor {
+func NewProcessor(vm *jsonnet.VM, ioWorkers int, fs afero.Fs, logDest io.Writer) *Processor {
 	if ioWorkers < 1 {
 		panic(errors.New("NewProcessor: ioWorkers must be positive"))
 	}
@@ -75,7 +75,7 @@ func NewProcessor(ioWorkers int, fs afero.Fs, logDest io.Writer) *Processor {
 		// Right now, we don't set vm.Importer.
 		// In the production code path, that is fine as it uses a FileImporter to read from the actual filesystem.
 		// None of our tests currently rely on any imports, so we don't need to write an afero importer yet.
-		vm: jsonnet.MakeVM(),
+		vm: vm,
 		fs: fs,
 
 		reqCh:   make(chan processRequest, ioWorkers),

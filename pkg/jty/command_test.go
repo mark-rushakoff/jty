@@ -1,10 +1,14 @@
 package jty_test
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/influxdata/jty/pkg/jty"
+	"github.com/spf13/afero"
 )
 
 func TestCommand_PositionalArgs(t *testing.T) {
@@ -230,5 +234,97 @@ func TestCommand_MultipleLogs(t *testing.T) {
 		Args: []string{"1.jsonnet", "1.yml", "2.jsonnet", "2.yml", "3.jsonnet", "3.yml"},
 	}); err != jty.ErrEncounteredErrors {
 		t.Fatalf("expected ErrEncounteredErrors, got %v", err)
+	}
+}
+
+func TestCommand_Imports(t *testing.T) {
+	tc := NewTestCommand("")
+
+	// The Command is hardcoded to instantiate a Jsonnet VM with a FileImporter,
+	// so the imports must reside on disk even though the source files are on an in-mem afero fs.
+	libdir, err := ioutil.TempDir("", "jty-imports-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(libdir)
+
+	highDir := filepath.Join(libdir, "high-priority")
+	lowDir := filepath.Join(libdir, "low-priority")
+	if err := os.Mkdir(highDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(lowDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// both.libsonnet is present but different in both directories.
+	// Expect X=1.
+	if err := ioutil.WriteFile(
+		filepath.Join(highDir, "both.libsonnet"),
+		[]byte("{X: 1}"),
+		0600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(
+		filepath.Join(lowDir, "both.libsonnet"),
+		[]byte("{X: 2}"),
+		0600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := ioutil.WriteFile(
+		filepath.Join(highDir, "up.libsonnet"),
+		[]byte("{up: true}"),
+		0600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(
+		filepath.Join(lowDir, "down.libsonnet"),
+		[]byte("{down: true}"),
+		0600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	// Now write the in-mem fs source.
+	if err := afero.WriteFile(tc.FS, "in.jsonnet", []byte(`
+local both = import 'both.libsonnet';
+local down = import 'down.libsonnet';
+local up = import 'up.libsonnet';
+
+[
+both + down + up,
+]
+`), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the command.
+	if err := tc.Cmd.Run(&jty.Flags{
+		Args: []string{"in.jsonnet", "out.yml"},
+
+		// Rightmost wins.
+		JPaths: []string{lowDir, highDir},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Even though the imports were from disk, the output is in the in-mem fs.
+	got, err := afero.ReadFile(tc.FS, "out.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expYAML := `---
+X: 1
+down: true
+up: true
+...
+`
+	if string(got) != expYAML {
+		t.Fatalf("expected file content of out.yml to be %q; got %q", expYAML, got)
 	}
 }

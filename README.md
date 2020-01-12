@@ -8,6 +8,8 @@ it processes many Jsonnet files and emits YAML to specified output files.
 jty simply accepts input as pairs of /path/to/input.jsonnet and /path/to/output.yml, and in a single process evaluates all the input Jsonnet to generate the corresponding output YAML.
 This way, .libsonnet files that are imported more than once are read and evaluated only once.
 
+It also supports `JSONNET_PATH` and the `--jpath`/`-J` flags like the official `jsonnet` command.
+
 If jty still isn't fast enough for your needs,
 perhaps [Databricks' SJsonnet](https://databricks.com/blog/2018/10/12/writing-a-faster-jsonnet-compiler.html)
 would be a better fit for you.

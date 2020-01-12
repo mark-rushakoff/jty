@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	jsonnet "github.com/google/go-jsonnet"
 	"github.com/influxdata/jty/pkg/jty"
 	"github.com/spf13/afero"
 )
@@ -13,7 +14,7 @@ import (
 func TestProcessor_DryRun(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	log := new(bytes.Buffer)
-	p := jty.NewProcessor(runtime.GOMAXPROCS(-1), fs, log)
+	p := jty.NewProcessor(jsonnet.MakeVM(), runtime.GOMAXPROCS(-1), fs, log)
 
 	dryRunOut := new(bytes.Buffer)
 	p.DryRunDest = dryRunOut
@@ -40,7 +41,7 @@ func TestProcessor_DryRun(t *testing.T) {
 func TestProcessor_Process(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	log := new(bytes.Buffer)
-	p := jty.NewProcessor(runtime.GOMAXPROCS(-1), fs, log)
+	p := jty.NewProcessor(jsonnet.MakeVM(), runtime.GOMAXPROCS(-1), fs, log)
 
 	JYOneTwo.WriteJ(t, fs, "in1.jsonnet")
 

@@ -16,6 +16,17 @@ func main() {
 		exe := filepath.Base(os.Args[0])
 		fmt.Fprintf(os.Stderr, "USAGE: %s [opts] [[INPUT_JSONNET OUTPUT_YAML]...]:\n", exe)
 		fmt.Fprintln(os.Stderr, fs.FlagUsages())
+		fmt.Fprintf(os.Stderr, `ENVIRONMENT VARIABLES
+
+JSONNET_PATH is a colon-(semicolon on Windows) separated list of directories added
+in reverse order before the paths specified by --jpath (i.e. left-most wins).
+The follow three invocations are equivalent:
+    JSONNET_PATH=a:b jty -J c -J d
+    JSONNET_PATH=d:c:a:b jty
+    jty -J b -J a -J c -J d
+
+`)
+
 		fmt.Fprintf(os.Stderr, `EXAMPLE USES
 
 Evaluate in.jsonnet and save the resulting YAML as out.yaml:
@@ -48,7 +59,7 @@ and for each file foo.jsonnet save a relative yml/foo.yml file
 		fs.Usage()
 		os.Exit(1)
 	}
-	flags.FinishParse()
+	flags.FinishParse(os.Getenv("JSONNET_PATH"))
 
 	if flags.HelpRequested {
 		fs.Usage()
