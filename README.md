@@ -3,6 +3,10 @@
 jty (prounounced "jutty", rhymes with "putty") is a simple utility that does one thing:
 it processes many Jsonnet files and emits YAML to specified output files.
 
+While some tools are able to directly consume Jsonnet, generating and committing the resulting YAML
+allows authors to modify the Jsonnet with confidence in the resulting output.
+This also helps with confidence in reviewing Jsonnet changes.
+
 ## What jty does
 
 jty simply accepts input as pairs of /path/to/input.jsonnet and /path/to/output.yml, and in a single process evaluates all the input Jsonnet to generate the corresponding output YAML.
