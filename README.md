@@ -1,12 +1,24 @@
 # jty: Jsonnet To Yaml
 
-jty is a simple utility that does one thing: it processes many Jsonnet files and emits YAML to specified output files.
+jty (prounounced "jutty", rhymes with "putty") is a simple utility that does one thing:
+it processes many Jsonnet files and emits YAML to specified output files.
 
-We have a fair sized configuration repository of Jsonnet, and we used to have a multiple-step pipeline to generate the YAML.
-It didn't take _long_ to do so, but the runtime was noticeable, especially when you needed to make many small changes in a row and regenerate the YAML each step along the way.
+## What jty does
 
-`jty` simply accepts input as pairs of /path/to/input.jsonnet and /path/to/output.yml, and in a single process evaluates all the input Jsonnet to generate the corresponding output YAML.
-This way, common .libsonnet files are read and evaluated only once.
+jty simply accepts input as pairs of /path/to/input.jsonnet and /path/to/output.yml, and in a single process evaluates all the input Jsonnet to generate the corresponding output YAML.
+This way, .libsonnet files that are imported more than once are read and evaluated only once.
+
+If jty still isn't fast enough for your needs,
+perhaps [Databricks' SJsonnet](https://databricks.com/blog/2018/10/12/writing-a-faster-jsonnet-compiler.html)
+would be a better fit for you.
+But SJsonnet also requires a JVM, whereas jty is written and Go and is distributable as a ~10MB standalone binary.
+
+## What jty doesn't do
+
+jty currently does not support setting top-level arguments or external variables.
+Support on a global level would be straightforward but not necessarily useful.
+But there isn't an obviously intuitive way to supply top-level arguments or external variables on a per-file basis,
+so for now, if your Jsonnet requires them, you can use multiple invocations of standard `jsonnet` or you can modify jty.
 
 ## Example uses
 
@@ -71,8 +83,23 @@ user	0m5.799s
 sys	0m0.931s
 ```
 
-And if we change the pipeline altogether to use jty, the real time drops to about 25% of the previous step,
-not to mention the user time being cut to about 6% of the previous step and the system time cut to about 9%.
+If you were to instead drop the yamlfmt command and use [`kubecfg show`](https://github.com/bitnami/kubecfg), you can cut the real time roughly in half:
+
+```
+time (find . -name '*.jsonnet' -print0 |
+      parallel -q -0 bash -c "kubecfg show "{}" > '{.}.yml'")
+
+real	0m0.448s
+user	0m1.990s
+sys	0m0.778s
+```
+
+But kubecfg offers a lot of functionality that we don't need to just evaluate a lot of Jsonnet.
+Note also that kubecfg formats the resulting YAML with slightly different indentation,
+although the result is effectively the same.
+
+If we change the pipeline altogether to use jty, the real time drops to about half of the time of using kubecfg,
+not to mention the user time being cut to about 18% and the system time cut to about 10%.
 
 ```
 time (find . -name '*.jsonnet' -exec bash -c 'for p in "$@"; do
