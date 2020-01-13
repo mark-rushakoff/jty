@@ -1,0 +1,26 @@
+---
+jobs:
+    test:
+        docker:
+          - image: circleci/golang:1.13
+        environment:
+            GOFLAGS: -mod=readonly -p=8
+        resource_class: small
+        steps:
+          - checkout
+          - run: go test -race ./...
+          - run:
+                command: go run -race . .circleci/config.jsonnet .circleci/config.yml
+                name: Sync YAML
+          - run:
+                command: test -z "$(git status --porcelain)" || (echo "Changes detected
+                    after running make generate"; git status; git --no-pager diff;
+                    false)
+                name: Confirm no diff after syncing YAML
+version: 2
+workflows:
+    build-and-test:
+        jobs:
+          - test
+    version: 2
+...
