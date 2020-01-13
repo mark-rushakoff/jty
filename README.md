@@ -12,6 +12,42 @@ This also helps with confidence in reviewing Jsonnet changes.
 jty simply accepts input as pairs of /path/to/input.jsonnet and /path/to/output.yml, and in a single process evaluates all the input Jsonnet to generate the corresponding output YAML.
 This way, .libsonnet files that are imported more than once are read and evaluated only once.
 
+jty produces human-reader-friendly YAML, unlike `jsonnet -y` which effectively emits JSON, which is also valid YAML.
+That is, jty produces:
+
+```yaml
+---
+numbers:
+  - 1
+  - 2
+  - 3
+object:
+    that:
+        is:
+            deeply: nested
+```
+
+and `jsonnet -y` produces:
+
+```yaml
+---
+{
+   "numbers": [
+      1,
+      2,
+      3
+   ],
+   "object": {
+      "that": {
+         "is": {
+            "deeply": "nested"
+         }
+      }
+   }
+}
+...
+```
+
 It also supports `JSONNET_PATH` and the `--jpath`/`-J` flags like the official `jsonnet` command.
 
 If jty still isn't fast enough for your needs,
