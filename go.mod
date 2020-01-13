@@ -1,4 +1,4 @@
-module github.com/influxdata/jty
+module github.com/mark-rushakoff/jty
 
 go 1.12
 

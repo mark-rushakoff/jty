@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/influxdata/jty/pkg/jty"
+	"github.com/mark-rushakoff/jty/pkg/jty"
 	"github.com/spf13/pflag"
 )
 
